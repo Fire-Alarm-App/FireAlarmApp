@@ -40,3 +40,22 @@ form.addEventListener('input', () => {
   const outputTemp = convertTemp(inputTemp, fromUnit, toUnit);
   outputField.value = (Math.round(outputTemp * 100) / 100) + ' ' + toUnit.toUpperCase();
 });
+
+async function subscribe() {
+  if ('serviceWorker' in navigator) {
+    let sw = await navigator.serviceWorker.ready;
+    let push = await sw.pushManager.subscribe(({
+      userVisibleOnly: true,
+      applicationServerKey: 'BDNhhvCejJLGp8C1DSl0rzwdmONmv7EsfJTk0TG0flkvmvacsY9IkufqR63Ykfs8o-goFKEYxra7vUwxBURj8rs'
+    }));
+    console.log(JSON.stringify(push));
+  }
+}
+if ('serviceWorker' in navigator) {
+  addEventListener('load', async () => {
+    let sw = await navigator.serviceWorker.register('./sw.js');
+    console.log(sw);
+  });
+} else {
+  document.getElementById("subscribe").toggleAttribute("hidden");
+}
