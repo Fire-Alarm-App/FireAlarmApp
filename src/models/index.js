@@ -22,7 +22,7 @@ if (config.use_env_variable) {
         password: db_info.password
     });
     sqlCon.connect(function(err) {
-        sqlCon.query(`CREATE DATABASE IF NOT EXISTS ${db_info.databse}`);
+        sqlCon.query(`CREATE DATABASE IF NOT EXISTS ${db_info.database}`);
     });
 
     sequelize = new Sequelize(db_info.database, db_info.user, db_info.password, { dialect: 'mysql' });
