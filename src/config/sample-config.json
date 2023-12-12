@@ -1,0 +1,20 @@
+{
+  "development": {
+    "database": {
+      "host": "localhost",
+      "user": "user",
+      "password": "password",
+      "database": "db-name"
+    },
+    "push_details": {
+      "publicKey": "",
+      "privateKey": "",
+      "email": "example@gmail.com"
+    },
+    "port": 3000,
+    "use_env_variable": false
+  },
+  "production": {
+
+  }
+}
