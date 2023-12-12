@@ -1,10 +1,7 @@
 {
   "development": {
     "database": {
-      "host": "localhost",
-      "user": "user",
-      "password": "password",
-      "database": "db-name"
+      "dbFile": "db-name.sqlite"
     },
     "push_details": {
       "publicKey": "",

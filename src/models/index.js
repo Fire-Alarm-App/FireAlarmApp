@@ -18,7 +18,7 @@ if (config.use_env_variable) {
 } else {
     const db_info = config.database;
 
-    const dbPath = path.join(root_dir, db_info.database);
+    const dbPath = path.join(root_dir, db_info.dbFile);
     if (!fs.existsSync(dbPath)) {
         new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
             console.error('Failed to create db with error:', err);
