@@ -37,4 +37,15 @@ Object.keys(db).forEach(modelName => {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
+// Loading test data for demo purposes
+insertTestData();
+
+async function insertTestData() {
+    const users = await db.user.findAll()
+    if (users.length === 0) {
+        db.user.create({ firstName: 'Brett', lastName: 'Csotty', username: 'bcsotty', password: '123' });
+        db.user.create({ firstName: 'Nico', lastName: 'Bokhari', username: 'nbokhari', password: '123' });
+    }
+}
+
 module.exports = db;

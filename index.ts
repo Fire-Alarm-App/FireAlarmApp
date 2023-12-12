@@ -14,7 +14,6 @@ const { morganMiddleware } = require(`${root_dir}/src/middleware/logging.js`);
 
 // Other imports
 const path = require('path');
-const push = require('web-push');
 
 // Environment/Configuration details
 const env = process.env.NODE_ENV || 'development'
@@ -25,7 +24,7 @@ const port = config.port;
 const pwa = require(`${root_dir}/src/controllers/pwa.controller.js`);
 
 // DB Stuff
-const db = require('./src/models');
+const db = require(`${root_dir}/src/models`);
 
 // Applying middlewares.
 app.use(helmet());
@@ -37,10 +36,6 @@ app.use(morganMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
-
-// Configuring web-push details
-const pushDetails = config.push_details;
-push.setVapidDetails(`mailto:${pushDetails.email}`, pushDetails.publicKey, pushDetails.privateKey);
 
 // Pre-flight requests
 app.options('*', function(req, res) {
