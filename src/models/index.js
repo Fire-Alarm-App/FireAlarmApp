@@ -4,7 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const { Sequelize } = require('sequelize');
 const root_dir = require('app-root-path');
-const mysql = require('mysql2');
+const sqlite3 = require('sqlite3');
+
 
 const basename = 'index.js';
 const env = process.env.NODE_ENV || 'development';
@@ -16,18 +17,15 @@ if (config.use_env_variable) {
     sequelize = new Sequelize(process.env[config.use_env_variable], config);
 } else {
     const db_info = config.database;
-    let sqlCon = mysql.createConnection({
-        host : db_info.host,
-        user: db_info.user,
-        password: db_info.password
-    });
-    sqlCon.connect(function(err) {
-        sqlCon.query(`CREATE DATABASE IF NOT EXISTS ${db_info.database}`);
-    });
 
-    sequelize = new Sequelize(db_info.database, db_info.user, db_info.password, { dialect: 'mysql' });
+    const dbPath = path.join(root_dir, db_info.database);
+    if (!fs.existsSync(dbPath)) {
+        new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+            console.error('Failed to create db with error:', err);
+        });
+    }
+    sequelize = new Sequelize({ dialect: 'sqlite', storage: db_info.database });
 }
-
 fs
     .readdirSync(path.join(root_dir, "src", "models"))
     .filter(file => {
