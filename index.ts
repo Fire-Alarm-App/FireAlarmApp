@@ -12,9 +12,6 @@ const cors = require('cors');
 const errorhandler = require('errorhandler');
 const { morganMiddleware } = require(`${root_dir}/src/middleware/logging.js`);
 
-// Other imports
-const path = require('path');
-
 // Environment/Configuration details
 const env = process.env.NODE_ENV || 'development'
 const config = require(`${root_dir}/src/config/config.json`)[env];
@@ -29,7 +26,7 @@ const db = require(`${root_dir}/src/models`);
 // Applying middlewares.
 app.use(helmet());
 app.use(cors());
-if (env === "development"){}
+if (env === "development")
     app.use(errorhandler());
 
 app.use(morganMiddleware);
