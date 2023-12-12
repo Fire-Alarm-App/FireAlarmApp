@@ -2,3 +2,4 @@
 /.idea
 /node_modules
 bun.lockb
+/config/config.json
