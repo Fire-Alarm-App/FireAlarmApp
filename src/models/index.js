@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { Sequelize } = require('sequelize');
 const root_dir = require('app-root-path');
+const mysql = require('mysql2');
 
 const basename = 'index.js';
 const env = process.env.NODE_ENV || 'development';
@@ -15,6 +16,15 @@ if (config.use_env_variable) {
     sequelize = new Sequelize(process.env[config.use_env_variable], config);
 } else {
     const db_info = config.database;
+    let sqlCon = mysql.createConnection({
+        host : db_info.host,
+        user: db_info.user,
+        password: db_info.password
+    });
+    sqlCon.connect(function(err) {
+        sqlCon.query(`CREATE DATABASE IF NOT EXISTS ${db_info.db}`);
+    });
+
     sequelize = new Sequelize(db_info.database, db_info.user, db_info.password, { dialect: 'mysql' });
 }
 
