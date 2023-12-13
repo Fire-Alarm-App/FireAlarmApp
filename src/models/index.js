@@ -21,7 +21,8 @@ if (config.use_env_variable) {
     const dbPath = path.join(root_dir, db_info.dbFile);
     if (!fs.existsSync(dbPath)) {
         new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
-            console.error('Failed to create db with error:', err);
+            if (err)
+                console.error('Failed to create db with error:', err);
         });
     }
     sequelize = new Sequelize({ dialect: 'sqlite', storage: db_info.database });
