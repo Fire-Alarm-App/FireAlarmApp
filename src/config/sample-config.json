@@ -1,0 +1,17 @@
+{
+  "development": {
+    "database": {
+      "dbFile": "db.sqlite"
+    },
+    "push_details": {
+      "publicKey": "",
+      "privateKey": "",
+      "email": ""
+    },
+    "port": 3000,
+    "use_env_variable": false
+  },
+  "production": {
+
+  }
+}
