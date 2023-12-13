@@ -50,6 +50,7 @@ db.Sequelize = Sequelize;
 insertTestData();
 
 async function insertTestData() {
+    await sequelize.sync({ force: false });
     const users = await db.user.findAll()
     if (users.length === 0) {
         db.user.create({ firstName: 'Brett', lastName: 'Csotty', username: 'bcsotty', password: '123' });
