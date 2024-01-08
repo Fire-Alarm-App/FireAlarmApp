@@ -3,4 +3,4 @@
 /node_modules
 bun.lockb
 /src/config/config.json
-db.sqlite
+*.sqlite
