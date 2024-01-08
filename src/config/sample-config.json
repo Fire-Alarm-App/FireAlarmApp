@@ -1,12 +1,12 @@
 {
   "development": {
     "database": {
-      "dbFile": "db-name.sqlite"
+      "dbFile": "db.sqlite"
     },
     "push_details": {
       "publicKey": "",
       "privateKey": "",
-      "email": "example@gmail.com"
+      "email": ""
     },
     "port": 3000,
     "use_env_variable": false

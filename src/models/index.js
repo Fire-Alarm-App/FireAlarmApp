@@ -21,7 +21,8 @@ if (config.use_env_variable) {
     const dbPath = path.join(root_dir, db_info.dbFile);
     if (!fs.existsSync(dbPath)) {
         new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
-            console.error('Failed to create db with error:', err);
+            if (err)
+                console.error('Failed to create db with error:', err);
         });
     }
     sequelize = new Sequelize({ dialect: 'sqlite', storage: db_info.database });
@@ -50,6 +51,7 @@ db.Sequelize = Sequelize;
 insertTestData();
 
 async function insertTestData() {
+    await sequelize.sync({ force: false });
     const users = await db.user.findAll()
     if (users.length === 0) {
         db.user.create({ firstName: 'Brett', lastName: 'Csotty', username: 'bcsotty', password: '123' });
