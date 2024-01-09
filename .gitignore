@@ -1,0 +1,6 @@
+/target
+/.idea
+/node_modules
+bun.lockb
+/src/config/config.json
+*.sqlite
