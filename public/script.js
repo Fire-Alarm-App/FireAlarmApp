@@ -29,6 +29,7 @@ async function subscribe() {
 
 subscribeButton.addEventListener('click', subscribe);
 
+// Allows offline support for PWA
 if ('serviceWorker' in navigator) {
   addEventListener('load', async () => {
     await navigator.serviceWorker.register('./sw.js');
@@ -176,5 +177,3 @@ document.addEventListener('DOMContentLoaded', function() {
     // TODO: Call fetchRequestHistory initially and set up pagination
     fetchRequestHistory(1);
 });
-
-
