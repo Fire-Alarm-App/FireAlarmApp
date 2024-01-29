@@ -7,6 +7,7 @@
 - [Progressive Web App Tutorial by Mozilla](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)
 - [NodeJS Authentication Example](https://github.com/cornflourblue/node-mysql-registration-login-api/tree/master)
 - [Sequelize Docs (used for DB interactions)](https://sequelize.org/docs/v6/)
+- [SwaggerDocs Documentation Guide](https://dev.to/kabartolo/how-to-document-an-express-api-with-swagger-ui-and-jsdoc-50do)
 ## Testing
 
 - [Cypress](https://docs.cypress.io/guides/overview/why-cypress)

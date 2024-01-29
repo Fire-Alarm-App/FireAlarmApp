@@ -19,11 +19,57 @@ router.post("/notify", notifyUser);
 router.post("/subscribe", subscribe);
 
 // Express Routes
+
+/**
+ * @openapi
+ * /:
+ *  get:
+ *    summary: Index page for website
+ *    description: Retrieves index.html from the static directory
+ *    responses:
+ *      200:
+ *        description: Returns the index.html
+ */
 function home (req, res) {
     let index_path = path.join(root_dir + "/index.html");
     res.sendFile(index_path);
 }
 
+
+/**
+ * @openapi
+ * /notify:
+ *  post:
+ *    summary: Notifies user responsible for alarm
+ *    description: Notifies a user responsible for the fire alarm based on the ID passed in
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              username:
+ *                type: string
+ *                description: The user's id.
+ *                example: bcsotty
+ *              notification:
+ *                type: object
+ *                properties:
+ *                  title:
+ *                    type: string
+ *                    description: The title of the displayed notification
+ *                    example: Fire Detected!
+ *                  message:
+ *                    type: string
+ *                    description: The message attached to the notification
+ *                    example: Fire confirmed in room 104.
+ *    responses:
+ *      200:
+ *        description: Successful response
+ *
+ *
+ */
 async function notifyUser (req, res) {
     // TODO Need to add security to ensure only the fire alarm server can call this endpoint
     const body = req.body;
@@ -35,6 +81,7 @@ async function notifyUser (req, res) {
         }
     });
     if (users.length !== 1) {
+
         return res.json({"error": "Couldn't find user with username"});
     }
     const user = users[0];

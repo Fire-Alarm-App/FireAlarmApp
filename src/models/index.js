@@ -20,12 +20,13 @@ if (config.use_env_variable) {
 
     const dbPath = path.join(root_dir, db_info.dbFile);
     if (!fs.existsSync(dbPath)) {
+        console.log(`DB not found at ${dbPath}. Creating database.`)
         new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
             if (err)
                 console.error('Failed to create db with error:', err);
         });
     }
-    sequelize = new Sequelize({ dialect: 'sqlite', storage: db_info.database });
+    sequelize = new Sequelize({ dialect: 'sqlite', storage: db_info.dbFile });
 }
 fs
     .readdirSync(path.join(root_dir, "src", "models"))

@@ -8,6 +8,31 @@
       "privateKey": "",
       "email": ""
     },
+    "options":  {
+      "definition": {
+        "openapi": "3.1.0",
+        "info": {
+          "title": "Express API with Swagger",
+          "version": "0.1.0",
+          "description": "",
+          "license": {
+            "name": "MIT",
+            "url": "https://spdx.org/licenses/MIT.html"
+          },
+          "contact": {
+            "name": "",
+            "url": "",
+            "email": ""
+          }
+        },
+        "servers": [
+          {
+            "url": ""
+          }
+        ]
+      },
+      "apis": ["./src/controllers/*.js"]
+    },
     "port": 3000,
     "use_env_variable": false
   },
