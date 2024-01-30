@@ -92,8 +92,6 @@ function home (req, res) {
  *                  type: string
  *                  description: Internal error sending push notification
  *                  example: Error occurred when sending notification
- *
- *
  */
 async function notifyUser (req, res) {
     // TODO Need to add security to ensure only the fire alarm server can call this endpoint
@@ -106,7 +104,6 @@ async function notifyUser (req, res) {
         }
     });
     if (users.length !== 1) {
-
         return res.status(404).json({"error": "Couldn't find user with provided username"});
     }
     const user = users[0];
@@ -175,28 +172,81 @@ async function notifyUser (req, res) {
  *                 type: string
  *                 description: The username of the user who is subscribing
  *                 example: bcsotty
+ *     responses:
+ *       200:
+ *         description: User successfully subscribed
+ *         content:
+ *           text/html:
+ *             example: Subscription linked to bcsotty successfully
+ *       404:
+ *         description: User not found in database
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error displayed when user not in DB
+ *                   example: User not found
+ *       409:
+ *         description: Endpoint already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: The error displayed when duplicate endpoint is submitted
+ *                   example: Duplicate endpoint error
+ *       500:
+ *         description: Unknown internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: The error displayed when an unknown failure occurred
+ *                   example: An unexpected error has occurred
  * */
 async function subscribe (req, res) {
-    // Function saves the JSON subscription object to the DB.
     const body = req.body;
     const subscription = body.sub;
     const username = body.user;
-    const sub = await db.subscription.create({ endpoint: subscription.endpoint,
-        expirationTime: subscription.expirationTime, p256dh: subscription.keys.p256dh, auth: subscription.keys.auth });
 
-    db.user.findAll().then(users => {
-        users.forEach(user => {
-            if (user.username === username)
-                user.setSubscription(sub)
-                    .then( () => {
-                        console.log(`Subscription linked to ${username} successfully`);
-                    })
-                    .catch(err => {
-                        console.error('Error linking subscription to user:', err);
-                    });
-        });
-    });
-    return res.json({"sub-id": sub.id});
+    const user = await db.user.findOne({ where: {username: username } });
+    try {
+        if (user) {
+            const sub = await user.createSubscription({
+                endpoint: subscription.endpoint,
+                expirationTime: subscription.expirationTime,
+                p256dh: subscription.keys.p256dh,
+                auth: subscription.keys.auth
+            });
+            console.log(`Subscription linked to ${username} successfully`);
+            return res.status(200).send(`Subscription linked to ${username} successfully`);
+        }
+        else {
+            return res.status(404).json({"error": "User not found"});
+        }
+    }
+    catch (err) {
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return res.status(409).json({"error": "Duplicate endpoint error"})
+        } else {
+            console.log("An unexpected error has occurred: ", err);
+            return res.status(500).json({"error": "An unexpected error has occurred"});
+        }
+    }
+}
+
+
+async function confirmAlarm (req, res) {
+
+    return res.status(200)
 }
 
 module.exports = router;

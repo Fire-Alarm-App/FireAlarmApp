@@ -1,40 +1,3 @@
-// const CACHE_NAME = `temperature-converter-v1`;
-
-// // Use the install event to pre-cache all initial resources.
-// self.addEventListener('install', event => {
-//   event.waitUntil((async () => {
-//     const cache = await caches.open(CACHE_NAME);
-//     cache.addAll([
-//       '/',
-//       '/converter.js',
-//       '/converter.css'
-//     ]);
-//   })());
-// });
-
-// self.addEventListener('fetch', event => {
-//   event.respondWith((async () => {
-//     const cache = await caches.open(CACHE_NAME);
-
-//     // Get the resource from the cache.
-//     const cachedResponse = await cache.match(event.request);
-//     if (cachedResponse) {
-//       return cachedResponse;
-//     } else {
-//         try {
-//           // If the resource was not in the cache, try the network.
-//           const fetchResponse = await fetch(event.request);
-
-//           // Save the resource in the cache and return it.
-//           cache.put(event.request, fetchResponse.clone());
-//           return fetchResponse;
-//         } catch (e) {
-//           // The network failed.
-//         }
-//     }
-//   })());
-// });
-
 self.addEventListener('push', function (event) {
   console.log("Received push");
   if (!(self.Notification && self.Notification.permission === "granted")) return;
@@ -57,4 +20,26 @@ self.addEventListener('push', function (event) {
       self.registration.showNotification(title, options)
   );
   console.log("Showing notification");
+});
+
+self.addEventListener('notificationclick', (event) => {
+  const clickedNotification = event.notification;
+  clickedNotification.close();
+
+  if (!event.action) {
+    console.log("Normal notification click");
+    return;
+  }
+
+  switch (event.action) {
+    case 'confirm':
+      console.log("User confirmed fire");
+      break;
+    case 'deny':
+      console.log("User says fire is false alarm");
+      break;
+    default:
+      console.log(`Unknown action clicked: ${event.action}`)
+      break;
+  }
 });
