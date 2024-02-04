@@ -263,15 +263,26 @@ async function subscribe (req, res) {
 }
 
 
-// Variable for storing responses
+// Map for storing alarm notifications while in processing
 let alarmMap = new Map();
 
 
+/**
+ * Returns a promise that delays for the number of seconds specified
+ *
+ * @param seconds The number of seconds to delay.
+ * @return Promise - The promise that will time out for the number of seconds
+ * */
 function delay (seconds) {
     return new Promise(resolve => setTimeout(resolve, seconds * 1000));
 }
 
 
+/**
+ * Returns the current UNIX timestamp
+ *
+ * @return number - The current UNIX timestamp
+ * */
 function getCurrentTimeStamp () {
     return Date.now();
 }
@@ -338,6 +349,17 @@ function getCurrentTimeStamp () {
  *                   type: string
  *                   description: The error that occurred
  *                   example: Couldn't find alarm with provided alarm ID
+ *       500:
+ *         description: Unknown server error (Likely DB related)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Unknown error occurred
+ *
  * */
 async function confirmAlarm (req, res) {
     // Receives alarm ID from controller -> Gets primary user for alarm from DB -> Notifies primary user of the fire and
@@ -471,7 +493,7 @@ async function logResponse (req, res) {
         return res.status(400).json({ 'error': 'Missing or incorrect parameters' });
 
     const userId = parseInt(params.userId);
-    const confirmed = params.confirmed;
+    const confirmed = (params.confirmed === 'true'); // Since params are strings, this converts to the proper type
     for (const [key, value] of alarmMap) {
         console.log(value[1], userId);
         if (value[1] === userId) {
@@ -488,6 +510,46 @@ async function logResponse (req, res) {
 }
 
 
+/**
+ * @openapi
+ *
+ * /alarm:
+ *   post:
+ *     summary: Configures new/existing alarms
+ *     description: Sets up and configures new/existing alarms. Currently, hardcoded with no request body for alpha.
+ *     responses:
+ *       200:
+ *         description: The alarm was successfully linked
+ *         content:
+ *           text/plain:
+ *             schema:
+ *               type: string
+ *               description: Success message
+ *               example: Alarm successfully linked
+ *       404:
+ *         description: Unable to find alarm or user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: The error that occurred
+ *                   example: Unable to find alarm
+ *       500:
+ *         description: Unexpected error occurred
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *                   example: Unexpected error occurred
+ *
+ */
 async function configureAlarm (req, res) {
     // This will be used in the future for setting up and configuring existing alarms. Currently just hardcoded for alpha
     const alarm = await db.alarm.findOne({ where: { alarmSerial: '1' } });
@@ -502,7 +564,7 @@ async function configureAlarm (req, res) {
                         })
                         .catch(err => {
                             console.error('Error linking alarm to bcsotty: ', err);
-                            return res.status(500).send('Error liking alarm');
+                            return res.status(500).send('Error linking alarm');
                         });
                 } else {
                     res.status(404).json({ 'error': 'Unable to find user' });
@@ -513,7 +575,7 @@ async function configureAlarm (req, res) {
         }
     } catch (err) {
         console.log('Unknown error occurred: ', err);
-        return res.status(500).send('Unexpected error occurred');
+        return res.status(500).json({ 'error': 'Unexpected error occurred' });
     }
 }
 
