@@ -19,6 +19,7 @@ module.exports = (sequelize, Sequelize) => {
     });
     User.associate = function (models) {
         User.hasMany(models.subscription);
+        User.hasOne(models.alarm);
     };
     return User;
 };

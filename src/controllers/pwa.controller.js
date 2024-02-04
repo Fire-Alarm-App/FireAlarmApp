@@ -14,12 +14,15 @@ const push = require('web-push');
 const pushDetails = config.push_details;
 push.setVapidDetails(`mailto:${pushDetails.email}`, pushDetails.publicKey, pushDetails.privateKey);
 
+// Applying routes
 router.get("/", home);
 router.post("/notify", notifyUser);
 router.post("/subscribe", subscribe);
+router.get("/confirm", confirmAlarm);
+router.get("/response", logResponse);
+router.post('/alarm', configureAlarm);
 
 // Express Routes
-
 /**
  * @openapi
  * /:
@@ -68,8 +71,24 @@ function home (req, res) {
  *      200:
  *        description: Push notification sent successfully
  *        content:
- *          text/html:
- *            example: Notification sent successfully!
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                totalSubscriptions:
+ *                  type: integer
+ *                  description: The number of subscriptions the user has (Devices)
+ *                  example: 2
+ *                successfulNotifications:
+ *                  type: integer
+ *                  description: The number of notifications that successfully were sent to the user
+ *                  example: 1
+ *                errors:
+ *                  type: array
+ *                  description: The list of any errors that occurred when sending notifications
+ *                  example: [Error occurred when sending notification]
+ *                  items:
+ *                    type: string
  *      404:
  *        description: User not found in Users/Subscriptions
  *        content:
@@ -81,17 +100,6 @@ function home (req, res) {
  *                  type: string
  *                  description: The error when finding the user in the DB
  *                  example: Couldn't find user with provided username
- *      500:
- *        description: Internal server error
- *        content:
- *          application/json:
- *            schema:
- *              type: object
- *              properties:
- *                error:
- *                  type: string
- *                  description: Internal error sending push notification
- *                  example: Error occurred when sending notification
  */
 async function notifyUser (req, res) {
     // TODO Need to add security to ensure only the fire alarm server can call this endpoint
@@ -107,30 +115,41 @@ async function notifyUser (req, res) {
         return res.status(404).json({"error": "Couldn't find user with provided username"});
     }
     const user = users[0];
-    const subscriptions = await db.subscription.findAll({where: { userId: user.id }});
-    if (subscriptions.length !== 1) {
+    const dbSubscriptions = await db.subscription.findAll({where: { userId: user.id }});
+    if (dbSubscriptions.length === 0) {
         return res.status(404).json({ "error": "Couldn't find user in subscriptions"})
     }
-    const subscription = subscriptions[0];
-    const sub = {
-        endpoint: subscription.endpoint,
-        expirationTime: subscription.expirationTime,
-        keys: {
-            p256dh: subscription.p256dh,
-            auth: subscription.auth
-        }
-    };
-    const notification = body.notification;
 
-    push.sendNotification(sub, JSON.stringify(notification))
-        .then((response) => {
-            console.log('Received push response: ', response);
-            return res.status(200).send("Notification sent successfully!");
-        })
-        .catch((error) => {
-            console.log('Error sending notification: ', error);
-            return res.status(500).json({"error": "Error occurred when sending notification"})
-        });
+    let successfulNotifications = 0;
+    let errors = [];
+
+    for (let subscription of dbSubscriptions) {
+        const sub = {
+            endpoint: subscription.endpoint,
+            expirationTime: subscription.expirationTime,
+            keys: {
+                p256dh: subscription.p256dh,
+                auth: subscription.auth
+            }
+        };
+
+        const notification = body.notification;
+
+        try {
+            await push.sendNotification(sub, JSON.stringify(notification));
+            console.log(`Notification sent successfully to ${username}`);
+            successfulNotifications++;
+        } catch (err) {
+            console.log(`Error sending notification to ${username}: `, err);
+            errors.push(`Error occurred when sending notification`);
+        }
+    }
+
+    return res.status(200).json({
+        "totalSubscriptions": dbSubscriptions.length,
+        "successfulNotifications": successfulNotifications,
+        "errors": errors
+    });
 }
 
 
@@ -244,9 +263,259 @@ async function subscribe (req, res) {
 }
 
 
-async function confirmAlarm (req, res) {
+// Variable for storing responses
+let alarmMap = new Map();
 
-    return res.status(200)
+
+function delay (seconds) {
+    return new Promise(resolve => setTimeout(resolve, seconds * 1000));
 }
+
+
+function getCurrentTimeStamp () {
+    return Date.now();
+}
+
+
+/**
+ * @openapi
+ *
+ * /confirm:
+ *   get:
+ *     summary: Sends push notification for user to confirm alarm status
+ *     description: Sends a web-push notification that has prompts the user to confirm/deny the existence of a fire.
+ *     parameters:
+ *       - in: query
+ *         name: alarmId
+ *         schema:
+ *           type: string
+ *         description: The ID of the alarm to be confirmed
+ *     responses:
+ *       200:
+ *         description: The confirmation prompt was successfully sent.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 confirmed:
+ *                   type: boolean
+ *                   description: True if the alarm was confirmed, False if it wasn't, and null if the user didn't respond in time
+ *                   example: null
+ *                 totalSubscriptions:
+ *                   type: integer
+ *                   description: The number of subscriptions the user has (Devices)
+ *                   example: 2
+ *                 successfulNotifications:
+ *                   type: integer
+ *                   description: The number of notifications that successfully were sent to the user
+ *                   example: 1
+ *                 errors:
+ *                   type: array
+ *                   description: The list of any errors that occurred when sending notifications
+ *                   example: [Error occurred when sending notification]
+ *                   items:
+ *                     type: string
+ *       400:
+ *         description: Invalid query parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Invalid/missing query parameter
+ *                   example: Missing or incorrect parameters
+ *       404:
+ *         description: Unable to find alarm, alarm doesn't have user, or user doesn't have subscription
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: The error that occurred
+ *                   example: Couldn't find alarm with provided alarm ID
+ * */
+async function confirmAlarm (req, res) {
+    // Receives alarm ID from controller -> Gets primary user for alarm from DB -> Notifies primary user of the fire and
+    // asks for confirmation -> Wait for response to come from the PWA -> If response not received within 10 seconds,
+    // return "null", otherwise return "true" or "false" corresponding to confirmed/denied.
+    const params = req.query;
+    if (!params.alarmId)
+        return res.status(400).json({"error": "Missing or incorrect parameters"});
+
+    const alarmId = params.alarmId;
+    let alarm = null;
+    let dbSubscriptions = null;
+    try {
+        const alarms = await db.alarm.findAll({
+            where: {
+                alarmSerial: alarmId
+            }
+        });
+        if (alarms.length === 0)
+            return res.status(404).json({"error": "Couldn't find alarm with provided alarm ID"});
+
+        alarm = alarms[0];
+        if (!alarm.userId)
+            return res.status(404).json({"error": "Alarm doesn't have a user assigned"});
+
+        dbSubscriptions = await db.subscription.findAll({where: {userId: alarm.userId}});
+        if (dbSubscriptions.length === 0)
+            return res.status(404).json({"error": "Couldn't find user in subscriptions"});
+    } catch (err) {
+        console.error('Unknown error occurred: ', err);
+        return res.status(500).json({ 'error': 'Unknown error occurred' });
+    }
+
+    let successfulNotifications = 0;
+    let errors = [];
+
+    for (let subscription of dbSubscriptions) {
+        const sub = {
+            endpoint: subscription.endpoint,
+            expirationTime: subscription.expirationTime,
+            keys: {
+                p256dh: subscription.p256dh,
+                auth: subscription.auth
+            }
+        };
+
+        const notification = {
+            'title': 'Alarm Confirmation',
+            'message': `Alarm was triggered at ${alarm.location}. Please confirm the existence of a fire.`,
+            'actions': [
+                {
+                    'action': 'confirm',
+                    'title': 'Confirm Alarm',
+                    'type': 'button'
+                },
+                {
+                    'action': 'deny',
+                    'title': 'False Alarm',
+                    'type': 'button'
+                }
+            ]
+        };
+
+        try {
+            await push.sendNotification(sub, JSON.stringify(notification));
+            console.log(`Confirm prompt successfully sent`);
+            successfulNotifications++;
+        } catch (err) {
+            console.log(`Error sending confirm prompt: `, err);
+            errors.push(`Error occurred when sending notification`);
+        }
+    }
+
+    // Below code handles communicating back to controller
+    const currentTime = getCurrentTimeStamp();
+    const key = `${alarm.id}-${currentTime}`;
+    alarmMap.set(key, [res, alarm.userId, dbSubscriptions.length, successfulNotifications, errors]);
+    await delay(10);
+    if (alarmMap.get(key)) {
+        alarmMap.delete(key);
+        return res.status(200).json({
+            'confirmed': 'null',
+            'totalSubscriptions': dbSubscriptions.length,
+            'successfulNotifications': successfulNotifications,
+            'errors': errors
+        });
+    }
+}
+
+
+/**
+ * @openapi
+ * /response:
+ *   get:
+ *     summary: Log user response to alarm confirmation
+ *     description: Takes user response to the alarm confirmation and sends it back to the controller
+ *     parameters:
+ *       - in: query
+ *         name: confirmed
+ *         schema:
+ *           type: boolean
+ *         description: Whether the alarm has been confirmed or is a false alarm
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: int
+ *         description: The user ID of the user giving response. (Replaced with token in future)
+ *     responses:
+ *       200:
+ *         description: Response received by server
+ *         example: Response received
+ *         type:
+ *           text/html
+ *       400:
+ *         description: Invalid query parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Missing or incorrect parameters
+ */
+async function logResponse (req, res) {
+    // Receives user response to the confirm alarm prompt and sends the response
+    // TODO: Add validation on the query parameters per openAPI spec
+    // TODO: Needs to retrieve user info based on tokens for selecting the correct response
+    const params = req.query;
+    if (!params.confirmed || !params.userId)
+        return res.status(400).json({ 'error': 'Missing or incorrect parameters' });
+
+    const userId = parseInt(params.userId);
+    const confirmed = params.confirmed;
+    for (const [key, value] of alarmMap) {
+        console.log(value[1], userId);
+        if (value[1] === userId) {
+            value[0].status(200).json({
+                'confirmed': confirmed,
+                'totalSubscriptions': value[2],
+                'successfulNotifications': value[3],
+                'errors': value[4]
+            });
+            alarmMap.delete(key);
+        }
+    }
+    return res.status(200).send('Response received');
+}
+
+
+async function configureAlarm (req, res) {
+    // This will be used in the future for setting up and configuring existing alarms. Currently just hardcoded for alpha
+    const alarm = await db.alarm.findOne({ where: { alarmSerial: '1' } });
+    try {
+        if (alarm) {
+            db.user.findOne({ where: {username: 'bcsotty'} }).then(user => {
+                if (user) {
+                    user.setAlarm(alarm)
+                        .then( () => {
+                            console.log('Alarm 1 successfully linked to bcsotty');
+                            return res.status(200).send('Alarm successfully linked');
+                        })
+                        .catch(err => {
+                            console.error('Error linking alarm to bcsotty: ', err);
+                            return res.status(500).send('Error liking alarm');
+                        });
+                } else {
+                    res.status(404).json({ 'error': 'Unable to find user' });
+                }
+            });
+        } else {
+            return res.status(404).json({ 'error': 'Unable to find alarm' });
+        }
+    } catch (err) {
+        console.log('Unknown error occurred: ', err);
+        return res.status(500).send('Unexpected error occurred');
+    }
+}
+
 
 module.exports = router;

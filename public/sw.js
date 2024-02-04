@@ -22,7 +22,7 @@ self.addEventListener('push', function (event) {
   console.log("Showing notification");
 });
 
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener('notificationclick', async (event) => {
   const clickedNotification = event.notification;
   clickedNotification.close();
 
@@ -31,15 +31,23 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
 
+  let response = null;
   switch (event.action) {
     case 'confirm':
       console.log("User confirmed fire");
+      response = true;
       break;
     case 'deny':
       console.log("User says fire is false alarm");
+      response = false;
       break;
     default:
       console.log(`Unknown action clicked: ${event.action}`)
       break;
+  }
+
+  if (!(response === null)) {
+    const res = await fetch(`/response?confirmed=${response}&userId=1`);
+    console.log(await res.text());
   }
 });

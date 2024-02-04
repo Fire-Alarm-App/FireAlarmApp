@@ -57,6 +57,7 @@ async function insertTestData() {
     if (users.length === 0) {
         db.user.create({ firstName: 'Brett', lastName: 'Csotty', username: 'bcsotty', password: '123' });
         db.user.create({ firstName: 'Nico', lastName: 'Bokhari', username: 'nbokhari', password: '123' });
+        db.alarm.create({ alarmSerial: '1', location: 'Apartment room 104'});
     }
 }
 
