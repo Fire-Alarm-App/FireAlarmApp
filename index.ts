@@ -20,7 +20,31 @@ const { morganMiddleware } = require(`${root_dir}/src/middleware/logging.js`);
 const env = process.env.NODE_ENV || 'development'
 const config = require(`${root_dir}/src/config/config.json`)[env];
 const port = config.port;
-const options = config.options;
+const options = {
+    "definition": {
+        "openapi": "3.1.0",
+        "info": {
+            "title": "Blaze: Your smart home fire alarm",
+            "version": "0.1.0",
+            "description": "The web API for the Blaze smart home fire alarm",
+            "license": {
+                "name": "MIT",
+                "url": "https://spdx.org/licenses/MIT.html"
+            },
+            "contact": {
+                "name": "FAASeniorDesign",
+                "url": "",
+                "email": "FAASeniorDesign@umich.edu"
+            }
+        },
+        "servers": [
+            {
+                "url": `http://127.0.0.1:${port}`
+            }
+        ]
+    },
+    "apis": ["./src/controllers/*.js"]
+};
 
 // Routes
 const pwa = require(`${root_dir}/src/controllers/pwa.controller.js`);
