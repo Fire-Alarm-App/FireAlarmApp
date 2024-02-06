@@ -24,7 +24,7 @@ const options = {
     "definition": {
         "openapi": "3.1.0",
         "info": {
-            "title": "Blaze: Your smart home fire alarm",
+            "title": "Blaze: Your Smart Home Fire Alarm",
             "version": "0.1.0",
             "description": "The web API for the Blaze smart home fire alarm",
             "license": {
@@ -32,7 +32,7 @@ const options = {
                 "url": "https://spdx.org/licenses/MIT.html"
             },
             "contact": {
-                "name": "FAASeniorDesign",
+                "name": "Blaze",
                 "url": "",
                 "email": "FAASeniorDesign@umich.edu"
             }
