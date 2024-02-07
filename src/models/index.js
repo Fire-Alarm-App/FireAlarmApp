@@ -3,13 +3,15 @@
 const fs = require('fs');
 const path = require('path');
 const { Sequelize } = require('sequelize');
-const root_dir = require('app-root-path');
+const root_dir_module = require('app-root-path');
+const root_dir = root_dir_module.toString();
 const sqlite3 = require('sqlite3');
 
 
 const basename = 'index.js';
 const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(root_dir, 'src', 'config', 'config.json'))[env];
+const config_path = path.join(root_dir, 'src', 'config', 'config.json').toString()
+const config = require(config_path)[env];
 const db = {};
 let sequelize;
 

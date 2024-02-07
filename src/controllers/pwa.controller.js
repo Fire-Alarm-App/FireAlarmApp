@@ -15,7 +15,6 @@ const pushDetails = config.push_details;
 push.setVapidDetails(`mailto:${pushDetails.email}`, pushDetails.publicKey, pushDetails.privateKey);
 
 // Applying routes
-router.get("/", home);
 router.post("/notify", notifyUser);
 router.post("/subscribe", subscribe);
 router.get("/confirm", confirmAlarm);
@@ -23,22 +22,6 @@ router.get("/response", logResponse);
 router.post('/alarm', configureAlarm);
 
 // Express Routes
-/**
- * @openapi
- * /:
- *  get:
- *    summary: Index page for website
- *    description: Retrieves index.html from the static directory
- *    responses:
- *      200:
- *        description: Returns the index.html
- */
-function home (req, res) {
-    let index_path = path.join(root_dir + "/index.html");
-    res.sendFile(index_path);
-}
-
-
 /**
  * @openapi
  * /notify:

@@ -2,11 +2,11 @@
 
 // Server setup
 const express = require('express');
+const root_dir = require("app-root-path");
 const app = express();
-const root_dir = require('app-root-path');
 
 // Swagger UI imports
-const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require('swagger-ui-express');
 
 // Importing middlewares
@@ -14,7 +14,7 @@ const helmet = require('helmet');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const errorhandler = require('errorhandler');
-const { morganMiddleware } = require(`${root_dir}/src/middleware/logging.js`);
+const morganMiddleware = require(`${root_dir}/src/middleware/logging.js`);
 
 // Environment/Configuration details
 const env = process.env.NODE_ENV || 'development'
@@ -70,7 +70,6 @@ if (env === "development")
 app.use(morganMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public'));
 
 
 // Pre-flight requests
