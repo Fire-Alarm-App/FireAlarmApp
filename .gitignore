@@ -4,3 +4,5 @@
 bun.lockb
 /src/config/config.json
 *.sqlite
+tsconfig.tsbuildinfo
+/backup
