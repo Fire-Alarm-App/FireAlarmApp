@@ -420,7 +420,7 @@ async function confirmAlarm (req, res) {
     const currentTime = getCurrentTimeStamp();
     const key = `${alarm.id}-${currentTime}`;
     alarmMap.set(key, [res, alarm.userId, dbSubscriptions.length, successfulNotifications, errors]);
-    await delay(10);
+    await delay(30);
     if (alarmMap.get(key)) {
         alarmMap.delete(key);
         return res.status(200).json({

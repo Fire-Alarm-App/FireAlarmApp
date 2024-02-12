@@ -47,7 +47,7 @@ self.addEventListener('notificationclick', async (event) => {
     }
   }
   if (!(response === null)) {
-    const res = await fetch(`/response?confirmed=${response}&userId=1`);
+    const res = await fetch(`http://141.215.80.233:4000/response?confirmed=${response}&userId=1`);
     console.log(await res.text());
   }
 });
