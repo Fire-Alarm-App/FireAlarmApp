@@ -1,5 +1,3 @@
-// noinspection TypeScriptValidateTypes
-
 // Server setup
 const express = require('express');
 const root_dir = require("app-root-path");
@@ -48,6 +46,7 @@ const options = {
 
 // Routes
 const pwa = require(`${root_dir}/src/controllers/pwa.controller.js`);
+const notifications = require(`${root_dir}/src/controllers/notifications.controller.js`)
 
 // DB Stuff
 const db = require(`${root_dir}/src/models`);
@@ -80,6 +79,7 @@ app.options('*', function(req, res) {
 
 // Applying routes
 app.use("/", pwa);
+app.use("/", notifications);
 
 // Setting up Swagger Docs
 const openApiSpecification = swaggerJsdoc(options);
