@@ -2,7 +2,8 @@ module.exports = (sequelize, Sequelize) => {
     const Subscription = sequelize.define("subscription", {
         endpoint: {
             type: Sequelize.STRING,
-            allowNull: false
+            allowNull: false,
+            unique: true
         },
         expirationTime: {
             type: Sequelize.TIME,

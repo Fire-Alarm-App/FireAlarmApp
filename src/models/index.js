@@ -3,13 +3,15 @@
 const fs = require('fs');
 const path = require('path');
 const { Sequelize } = require('sequelize');
-const root_dir = require('app-root-path');
+const root_dir_module = require('app-root-path');
+const root_dir = root_dir_module.toString();
 const sqlite3 = require('sqlite3');
 
 
 const basename = 'index.js';
 const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(root_dir, 'src', 'config', 'config.json'))[env];
+const config_path = path.join(root_dir, 'src', 'config', 'config.json').toString()
+const config = require(config_path)[env];
 const db = {};
 let sequelize;
 
@@ -20,12 +22,13 @@ if (config.use_env_variable) {
 
     const dbPath = path.join(root_dir, db_info.dbFile);
     if (!fs.existsSync(dbPath)) {
+        console.log(`DB not found at ${dbPath}. Creating database.`)
         new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
             if (err)
                 console.error('Failed to create db with error:', err);
         });
     }
-    sequelize = new Sequelize({ dialect: 'sqlite', storage: db_info.database });
+    sequelize = new Sequelize({ dialect: 'sqlite', storage: db_info.dbFile });
 }
 fs
     .readdirSync(path.join(root_dir, "src", "models"))
@@ -56,6 +59,7 @@ async function insertTestData() {
     if (users.length === 0) {
         db.user.create({ firstName: 'Brett', lastName: 'Csotty', username: 'bcsotty', password: '123' });
         db.user.create({ firstName: 'Nico', lastName: 'Bokhari', username: 'nbokhari', password: '123' });
+        db.alarm.create({ alarmSerial: '1', location: 'Apartment room 104'});
     }
 }
 
