@@ -80,6 +80,7 @@ app.options('*', function(req, res) {
 // Applying routes
 app.use("/", pwa);
 app.use("/", notifications);
+app.use(express.static('public'))
 
 // Setting up Swagger Docs
 const openApiSpecification = swaggerJsdoc(options);
