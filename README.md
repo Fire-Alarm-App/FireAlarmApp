@@ -2,8 +2,17 @@
 
 This is the PWA for our Fire Alarm App.
 Currently, the system has an express server with the necessary endpoints to
-create web push notifications and subscribe to the server. We have an initial UI
-built for the app. 
+create web push notifications and subscribe to the server. 
+
+# Setup and Running
+
+After cloning the repository, you can use either Bun or Node v18.6.0 to install the dependencies with the command
+`bun/npm install`
+
+Once the dependencies have been resolved, you can run the app using: 
+`bun/npm run start`
+
+This should host the server so long as your config.json file has been updated.
 
 ## Limitations
 Currently, there is a limitation when it comes to the web push notifications in that not all browsers support the
