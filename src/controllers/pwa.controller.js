@@ -4,6 +4,8 @@ const router = express.Router();
 
 // Other imports
 const path = require('path');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 const root_dir = require('app-root-path');
 const db = require(`${root_dir}/src/models`);
 const env = process.env.NODE_ENV || 'development'
@@ -18,6 +20,7 @@ push.setVapidDetails(`mailto:${pushDetails.email}`, pushDetails.publicKey, pushD
 
 router.post("/subscribe", subscribe);
 router.post('/alarm', configureAlarm);
+router.post("/register", registerUser);
 
 // Express Routes
 
@@ -26,7 +29,7 @@ router.post('/alarm', configureAlarm);
  *
  * /subscribe:
  *   post:
- *     summary: Subscribes user to push notifications
+ *     summary: Subscribes user to push notifications - PWA
  *     description: Subscribes user specified in request to receive notifications from the web server
  *     requestBody:
  *       required: true
@@ -136,7 +139,7 @@ async function subscribe (req, res) {
  *
  * /alarm:
  *   post:
- *     summary: Configures new/existing alarms
+ *     summary: Configures new/existing alarms - PWA
  *     description: Sets up and configures new/existing alarms. Currently, hardcoded with no request body for alpha.
  *     responses:
  *       200:
@@ -197,6 +200,101 @@ async function configureAlarm (req, res) {
     } catch (err) {
         console.log('Unknown error occurred: ', err);
         return res.status(500).json({ 'error': 'Unexpected error occurred' });
+    }
+}
+
+
+/**
+ * @openapi
+ *
+ * /register:
+ *   post:
+ *     summary: Creates a new User account - PWA
+ *     description: Creates a new user account in the database if the username isn't taken.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: The username for the user
+ *                 example: bcsotty
+ *               password:
+ *                 type: string
+ *                 description: The password for the user. Will be encrypted before saved to DB.
+ *                 example: 123
+ *               firstName:
+ *                 type: string
+ *                 description: The users first name
+ *                 example: Brett
+ *               lastName:
+ *                 type: string
+ *                 description: The users last name
+ *                 example: Csotty
+ *     responses:
+ *       200:
+ *         description: The user was successfully registered
+ *         content:
+ *           text/plain:
+ *             schema:
+ *               type: string
+ *               description: Success message
+ *               example: User successfully registered
+ *       422:
+ *         description: Invalid/missing parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *                   example: Password doesn't meet validation criteria
+ *       500:
+ *         description: Unexpected error occurred
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *                   example: Unexpected error occurred
+ */
+async function registerUser (req, res) {
+    const body = req.body;
+    const username = body.username;
+    const user = await db.user.findOne( { where: {username: username} } );
+    try {
+        if (!user) {
+            let password = body.password;
+            console.log(saltRounds, typeof(saltRounds));
+            bcrypt.hash(password, saltRounds, function(err, hash) {
+                if (err) {
+                    throw err;
+                }
+                const new_user = db.user.create({
+                    firstName: body.firstName,
+                    lastName: body.lastName,
+                    username: body.username,
+                    password: hash
+                });
+
+                console.log("Successfully created user ", username);
+                return res.status(200).send("User created successfully!");
+            });
+        } else {
+            return res.status(422).json({"error": "User already exists"});
+        }
+    }
+    catch (err) {
+        console.log("An unexpected error has occurred ", err);
+        return res.status(500).json({"error": "An unexpected error occurred"});
     }
 }
 

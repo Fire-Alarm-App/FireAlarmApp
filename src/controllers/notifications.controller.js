@@ -24,7 +24,7 @@ router.get("/response", logResponse);
  * @openapi
  * /notify:
  *  post:
- *    summary: Notifies all users in the DB
+ *    summary: Notifies all users in the DB - API
  *    description: Notifies all users in the DB of the notification provided
  *    requestBody:
  *      required: true
@@ -143,7 +143,7 @@ function getCurrentTimeStamp () {
  *
  * /confirm:
  *   get:
- *     summary: Sends push notification for user to confirm alarm status
+ *     summary: Sends push notification for user to confirm alarm status - API
  *     description: Sends a web-push notification that has prompts the user to confirm/deny the existence of a fire.
  *     parameters:
  *       - in: query
@@ -304,7 +304,7 @@ async function confirmAlarm (req, res) {
  * @openapi
  * /response:
  *   get:
- *     summary: Log user response to alarm confirmation
+ *     summary: Log user response to alarm confirmation - API
  *     description: Takes user response to the alarm confirmation and sends it back to the controller
  *     parameters:
  *       - in: query

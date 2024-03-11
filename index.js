@@ -37,7 +37,12 @@ const options = {
         },
         "servers": [
             {
-                "url": `http://127.0.0.1:${port}`
+                "url": `http://127.0.0.1:${port}`,
+                "description": "PWA"
+            },
+            {
+                "url": `http://127.0.0.1:${port}/api`,
+                "description": "API"
             }
         ]
     },
@@ -46,7 +51,7 @@ const options = {
 
 // Routes
 const pwa = require(`${root_dir}/src/controllers/pwa.controller.js`);
-const notifications = require(`${root_dir}/src/controllers/notifications.controller.js`)
+const api = require(`${root_dir}/src/controllers/notifications.controller.js`)
 
 // DB Stuff
 const db = require(`${root_dir}/src/models`);
@@ -79,7 +84,7 @@ app.options('*', function(req, res) {
 
 // Applying routes
 app.use("/", pwa);
-app.use("/", notifications);
+app.use("/api", api);
 app.use(express.static('public'))
 
 // Setting up Swagger Docs

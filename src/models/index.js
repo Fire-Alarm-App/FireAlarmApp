@@ -57,7 +57,7 @@ async function insertTestData() {
     await sequelize.sync({ force: false });
     const users = await db.user.findAll()
     if (users.length === 0) {
-        db.user.create({ firstName: 'Brett', lastName: 'Csotty', username: 'bcsotty', password: '123' });
+        db.user.create({ firstName: 'Brett', lastName: 'Csotty', username: 'bcsotty', password: '123', admin: true });
         db.user.create({ firstName: 'Nico', lastName: 'Bokhari', username: 'nbokhari', password: '123' });
         db.alarm.create({ alarmSerial: '1', location: 'Apartment room 104'});
     }
