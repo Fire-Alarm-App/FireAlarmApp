@@ -13,6 +13,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const errorhandler = require('errorhandler');
 const morganMiddleware = require(`${root_dir}/src/middleware/logging.js`);
+const authenticateToken = require(`${root_dir}/src/middleware/auth.js`);
 
 // Environment/Configuration details
 const env = process.env.NODE_ENV || 'development'
@@ -67,29 +68,37 @@ app.use(
         }
     })
 );
+
 app.use(cors());
-if (env === "development")
-    app.use(errorhandler());
+app.options('*', cors());
 
 app.use(morganMiddleware);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
-// Pre-flight requests
-app.options('*', function(req, res) {
-    res.sendStatus(200);
-});
-
-
 // Applying routes
-app.use("/", pwa);
 app.use("/api", api);
-app.use(express.static('public'))
 
-// Setting up Swagger Docs
-const openApiSpecification = swaggerJsdoc(options);
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiSpecification));
+app.use(express.static('public'));
+
+app.use(authenticateToken);
+
+app.get('*', (req, res, next) => {
+    console.log('Checking for user in request')
+    if (!req.user) {
+        return res.redirect('/login');
+    }
+
+    res.sendFile('public/index.html');
+});
+app.use("/", pwa);
+
+if (env === "development")
+    app.use(errorhandler());
+    // Setting up Swagger Docs
+    const openApiSpecification = swaggerJsdoc(options);
+    app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiSpecification));
 
 // Initialize DB models and start server
 db.sequelize.sync({ force: false }).then(function () {

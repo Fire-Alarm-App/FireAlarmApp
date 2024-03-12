@@ -18,7 +18,7 @@ module.exports = (sequelize, Sequelize) => {
         },
         admin: {
             type: Sequelize.BOOLEAN,
-            default: false
+            defaultValue: false
         }
     });
     User.associate = function (models) {

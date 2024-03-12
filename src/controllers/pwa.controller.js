@@ -6,6 +6,8 @@ const router = express.Router();
 const path = require('path');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+const jwt = require('jsonwebtoken');
+
 const root_dir = require('app-root-path');
 const db = require(`${root_dir}/src/models`);
 const env = process.env.NODE_ENV || 'development'
@@ -16,11 +18,14 @@ const push = require('web-push');
 const pushDetails = config.push_details;
 push.setVapidDetails(`mailto:${pushDetails.email}`, pushDetails.publicKey, pushDetails.privateKey);
 
-// Applying routes
+// Authentication middleware
+const authenticateToken = require(`${root_dir}/src/middleware/auth.js`);
 
-router.post("/subscribe", subscribe);
-router.post('/alarm', configureAlarm);
+// Applying routes
+router.post("/subscribe", authenticateToken, subscribe);
+router.post('/alarm', authenticateToken, configureAlarm);
 router.post("/register", registerUser);
+router.post("/login", loginUser)
 
 // Express Routes
 
@@ -272,12 +277,13 @@ async function registerUser (req, res) {
     const user = await db.user.findOne( { where: {username: username} } );
     try {
         if (!user) {
-            let password = body.password;
-            console.log(saltRounds, typeof(saltRounds));
+            const password = body.password;
             bcrypt.hash(password, saltRounds, function(err, hash) {
                 if (err) {
+                    console.log("Error occurred hashing password");
                     throw err;
                 }
+                console.log("Creating user");
                 const new_user = db.user.create({
                     firstName: body.firstName,
                     lastName: body.lastName,
@@ -295,6 +301,80 @@ async function registerUser (req, res) {
     catch (err) {
         console.log("An unexpected error has occurred ", err);
         return res.status(500).json({"error": "An unexpected error occurred"});
+    }
+}
+
+
+/**
+ * @openapi
+ *
+ * /register:
+ *   post:
+ *     summary: Logs a user in - PWA
+ *     description: Creates a JWT for the user if the login credentials are successful
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: The username for the user
+ *                 example: bcsotty
+ *               password:
+ *                 type: string
+ *                 description: The password for the user.
+ *                 example: 123
+ *     responses:
+ *       200:
+ *         description: The user was successfully logged in
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: The JWT for the user. (Expires after an hour)
+ *       401:
+ *         description: Authentication failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *                   example: Invalid username/password
+ *       500:
+ *         description: Unexpected error occurred
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: Error message
+ *                   example: Unexpected error occurred
+ */
+async function loginUser (req, res) {
+    const body = req.body;
+    const username = body.username;
+    const user = await db.user.findOne( { where: { username: username } });
+    try {
+        if (!user || ! await bcrypt.compare(body.password, user.password)) {
+            return res.status(401).send('Authentication failed');
+        }
+
+        const token = jwt.sign({ username: username }, config.jwt_secret, { expiresIn: '1h'});
+        return res.status(200).json({ token });
+    } catch (err) {
+        console.log("An unexpected error has occurred: ", err);
+        return res.status(500).json({"error": "An unexpected error has occurred"});
     }
 }
 
