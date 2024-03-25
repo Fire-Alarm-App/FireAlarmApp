@@ -82,7 +82,7 @@ app.use("/api", api);
 
 app.use(express.static('public'));
 
-app.use(authenticateToken);
+// app.use(authenticateToken);
 
 app.get('*', (req, res, next) => {
     console.log('Checking for user in request')
@@ -92,6 +92,7 @@ app.get('*', (req, res, next) => {
 
     res.sendFile('public/index.html');
 });
+
 app.use("/", pwa);
 
 if (env === "development")

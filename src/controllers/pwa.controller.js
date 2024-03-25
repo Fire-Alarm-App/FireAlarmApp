@@ -239,6 +239,10 @@ async function configureAlarm (req, res) {
  *                 type: string
  *                 description: The users last name
  *                 example: Csotty
+ *               email:
+ *                 type: string
+ *                 description: The users email
+ *                 example: bcsotty@umich.edu
  *     responses:
  *       200:
  *         description: The user was successfully registered
@@ -288,7 +292,8 @@ async function registerUser (req, res) {
                     firstName: body.firstName,
                     lastName: body.lastName,
                     username: body.username,
-                    password: hash
+                    password: hash,
+                    email: body.email
                 });
 
                 console.log("Successfully created user ", username);

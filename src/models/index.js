@@ -50,15 +50,17 @@ Object.keys(db).forEach(modelName => {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
-// Loading test data for demo purposes
-insertTestData();
+if (env === "development")
+    // Loading test data for demo purposes
+    var _ = insertTestData();
+
 
 async function insertTestData() {
     await sequelize.sync({ force: false });
     const users = await db.user.findAll()
     if (users.length === 0) {
-        db.user.create({ firstName: 'Brett', lastName: 'Csotty', username: 'bcsotty', password: '123', admin: true });
-        db.user.create({ firstName: 'Nico', lastName: 'Bokhari', username: 'nbokhari', password: '123' });
+        // TODO Update to insert via method instead so that passwords are bcrypted so we can actually login
+        db.user.create({ firstName: 'Brett', lastName: 'Csotty', username: 'bcsotty', password: '123', email: 'bcsotty@umich.edu', admin: true });
         db.alarm.create({ alarmSerial: '1', location: 'Apartment room 104'});
     }
 }
