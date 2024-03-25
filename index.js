@@ -82,12 +82,12 @@ app.use("/api", api);
 
 app.use(express.static('public'));
 
-// app.use(authenticateToken);
+app.use(authenticateToken);
 
 app.get('*', (req, res, next) => {
     console.log('Checking for user in request')
     if (!req.user) {
-        return res.redirect('/login');
+        return res.redirect('/sign-up');
     }
 
     res.sendFile('public/index.html');

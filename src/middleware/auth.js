@@ -17,6 +17,7 @@ function authenticateToken(req, res, next) {
         next();
     });
     console.log("After JWT verify");
+    // TODO Change so that this function is an endpoint for the React App to ping for authentication.
 }
 
 module.exports = authenticateToken;
