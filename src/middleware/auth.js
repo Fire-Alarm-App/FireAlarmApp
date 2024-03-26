@@ -4,20 +4,17 @@ const env = process.env.NODE_ENV || 'development'
 const config = require(`${root_dir}/src/config/config.json`)[env];
 
 function authenticateToken(req, res, next) {
-    console.log("Authenticating token");
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    if (!token || authHeader === undefined) return res.sendStatus(401);
+    const token = authHeader;
+    console.log(authHeader, req.headers, token);
+    if (!token || authHeader === undefined) return res.sendStatus(422);
 
-    console.log("Token not null. Checking for validity");
     jwt.verify(token, config.jwt_secret, (err, user) => {
-        if (err) return res.sendStatus(403); // Invalid token
+        if (err) return res.sendStatus(401); // Invalid token
         console.log();
         req.user = user;
         next();
     });
-    console.log("After JWT verify");
-    // TODO Change so that this function is an endpoint for the React App to ping for authentication.
 }
 
 module.exports = authenticateToken;

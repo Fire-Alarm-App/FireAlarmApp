@@ -26,6 +26,7 @@ router.post("/subscribe", authenticateToken, subscribe);
 router.post('/alarm', authenticateToken, configureAlarm);
 router.post("/register", registerUser);
 router.post("/login", loginUser)
+router.post("/authenticate", authenticateToken, authenticateUser)
 
 // Express Routes
 
@@ -313,7 +314,7 @@ async function registerUser (req, res) {
 /**
  * @openapi
  *
- * /register:
+ * /login:
  *   post:
  *     summary: Logs a user in - PWA
  *     description: Creates a JWT for the user if the login credentials are successful
@@ -381,6 +382,39 @@ async function loginUser (req, res) {
         console.log("An unexpected error has occurred: ", err);
         return res.status(500).json({"error": "An unexpected error has occurred"});
     }
+}
+
+
+/**
+ * @openapi
+ *
+ * /authenticate:
+ *   post:
+ *     summary: Checks if user has valid JWT.
+ *     description: Checks if user has a valid JWT. Uses the JWT in the authorization header
+ *     parameters:
+ *       - in: header
+ *         name: authorization
+ *         schema:
+ *           type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: The user has a valid JWT
+ *         content:
+ *           text/plain:
+ *             schema:
+ *               type: string
+ *               description: Success message
+ *               example: bcsotty has a valid JWT
+ *       401:
+ *         description: Authentication failed - Invalid JWT
+ *       422:
+ *         description: Unprocessable entity - Missing Headers
+ */
+async function authenticateUser (req, res) {
+    const user = req.user;
+    return res.status(200).send(`${user.username} has a valid JWT`)
 }
 
 

@@ -13,7 +13,6 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const errorhandler = require('errorhandler');
 const morganMiddleware = require(`${root_dir}/src/middleware/logging.js`);
-const authenticateToken = require(`${root_dir}/src/middleware/auth.js`);
 
 // Environment/Configuration details
 const env = process.env.NODE_ENV || 'development'
@@ -81,17 +80,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api", api);
 
 app.use(express.static('public'));
-
-app.use(authenticateToken);
-
-app.get('*', (req, res, next) => {
-    console.log('Checking for user in request')
-    if (!req.user) {
-        return res.redirect('/sign-up');
-    }
-
-    res.sendFile('public/index.html');
-});
 
 app.use("/", pwa);
 
